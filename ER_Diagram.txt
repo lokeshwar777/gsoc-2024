@@ -1,62 +1,48 @@
-// existing
-
-clUsers [icon: user] {
-  uid string pk
-  displayName string
-  email string
-  handle string
-  photoUrl string
-  country string
-  followerCount int
-  followingCount int
-  organisations string[] org
-  createdAt Date
-  updatedAt Date
-}
+// draft 1
 
 orgUsers [icon: user] {
-    uid string pk
-    orgHandle string
-    id string orgHandle uid
-    permissions string[]
+  userId string pk
+  orgHandle string
+  id string orgHandle userId
+  permissions string[]
 }
 
 orgSubscribers [icon: user] {
-    uid string
-    id string orgHandle uid
-    orgHadle string
+  subscribedUsers string[] clUsers
+  organisationsSubscribed string[] organisations
+  userId string
+  orgHandle string
 }
 
 userFollowers [icon: user] {
-  id followerId followingId
-  followingId string
+  userId string pk
   followerId string
+  followingId string
 }
 
-notifications [icon: bell] {
-  uid string pk
+relatedPosts [icon: twitter] {
+  userId string
+  tutId string
   content string
   createdAt Date
 }
 
-relatedPosts [icon: twitter] {
-  uid string
-  tutId string
-  createdAt Date
-}
-
-cl_mail [icon: mail] {
-  uid string
+clMail [icon: mail] {
+  userId string
   to string email
-  template: map {
-    data : {
-      verificationLink: string
-    }
-  }
+  verificationLink string
 }
 
-cl_org_general [icon: ] {
+contributors [icon: user] {
+  admin string 
+  contributor string
+  editor string
+  userId string
   orgHandle string
+}
+
+clOrgGeneral [icon: ] {
+  orgHandle string pk
   followerCount int
   contributorsCount int
   feedCount int
@@ -69,32 +55,47 @@ cl_org_general [icon: ] {
   updatedAt Date
 }
 
+clUsers [icon: user] {
+  userId string pk
+  displayName string
+  email string
+  handle string
+  photoUrl string
+  country string
+  followerCount int
+  followingCount int
+  organisations string[] orgHandles
+  createdAt Date
+  updatedAt Date
+}
+
 tutorialLikes [icon: thumbs-up] {
-  uid string
+  userId string
   tutId string
-  value int enum
+  count int
 }
 
 commentLikes [icon: thumbs-up] {
-  uid string
+  userId string
   commentId string
-  value int enum
+  count int
 }
 
 clComments [icon: comments] {
-  commentId string
+  commentId string pk
   context string
-  upVotes string
+  upVotes int
   downVotes int
   userId string
-  tutorialId string
+  commentReplies string[] clComments
+  tutorialId string 
   createdAt Date
-  replyTo stirng tut_id comment id
+  replyTo enum
 }
 
 tutorials [icon: video] {
-  tutId string
-  editors string[] users
+  tutId string pk
+  editors string[] userHandles
   tutTitle string
   isPublished boolean
   featuredImage string
@@ -102,7 +103,7 @@ tutorials [icon: video] {
   tutDescription string
   tutTags string[]
   orgHandle string
-  commentsCount array
+  commentsCount int
   upVotes int
   downVotes int
   yjsStepDocs subCollection
@@ -112,28 +113,50 @@ tutorials [icon: video] {
 }
 
 steps [icon: ] {
+  id string pk
+  tutId string
   content string
   deleted boolean
-  id tutIdTime
   time int
   title string
   visibility boolean
 }
 
 
+notifications [icon: bell] {
+  id string pk
+  userId string
+  content string
+  type string
+  status string
+  createdAt Date
+}
 
-relatedPosts.uid - clUsers.uid
+clMail.userId - clUsers.userId
+notifications.userId <> clUsers.userId
+// a user can receive many notifications
+// a notification can be sent to many users
+relatedPosts.userId > clUsers.userId
+// a user can create many posts
 relatedPosts.tutId - tutorials.tutId
 tutorialLikes.tutId - tutorials.tutId
-tutorialLikes.uid - clUsers.uid
-clComments.userId - clUsers.uid
-commentLikes.uid - clUsers.uid
+tutorialLikes.userId - clUsers.userId
+clComments.userId > clUsers.userId
+// a user can make many comments
+commentLikes.userId - clUsers.userId
 commentLikes.commentId - clComments.commentId
-clComments.tutorialId - tutorials.tutId
-notifications.uid - clUsers.uid
+clComments.tutorialId > tutorials.tutId
+// a tutorial can have many comments
 tutorials.steps - steps.id
-orgSubscribers.uid - clUsers.uid
-userFollowers.id - clUsers.uid
-cl_org_general.orgHandle - orgUsers.orgHandle
-orgUsers.uid - clUsers.organisations
-cl_org_general.orgHandle - orgSubscribers.orgHadle
+orgSubscribers.userId - clUsers.userId
+userFollowers.userId <> clUsers.userId
+// a user can have many followers
+// a user can follow many users
+clOrgGeneral.orgHandle <> orgUsers.orgHandle
+// an organisation can have many users
+// a user can be a part of many organistions
+contributors.orgHandle > clOrgGeneral.orgHandle
+// an organisations can have many contributors
+tutorials.orgHandle - orgSubscribers.orgHandle
+contributors.userId - clUsers.userId
+orgUsers.userId - clUsers.organisations
