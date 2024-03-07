@@ -1,0 +1,139 @@
+// existing
+
+clUsers [icon: user] {
+  uid string pk
+  displayName string
+  email string
+  handle string
+  photoUrl string
+  country string
+  followerCount int
+  followingCount int
+  organisations string[] org
+  createdAt Date
+  updatedAt Date
+}
+
+orgUsers [icon: user] {
+    uid string pk
+    orgHandle string
+    id string orgHandle uid
+    permissions string[]
+}
+
+orgSubscribers [icon: user] {
+    uid string
+    id string orgHandle uid
+    orgHadle string
+}
+
+userFollowers [icon: user] {
+  id followerId followingId
+  followingId string
+  followerId string
+}
+
+notifications [icon: bell] {
+  uid string pk
+  content string
+  createdAt Date
+}
+
+relatedPosts [icon: twitter] {
+  uid string
+  tutId string
+  createdAt Date
+}
+
+cl_mail [icon: mail] {
+  uid string
+  to string email
+  template: map {
+    data : {
+      verificationLink: string
+    }
+  }
+}
+
+cl_org_general [icon: ] {
+  orgHandle string
+  followerCount int
+  contributorsCount int
+  feedCount int
+  orgCountry string
+  orgEmail string
+  orgName string
+  orgPublished boolean
+  orgWebsite string
+  createdAt Date
+  updatedAt Date
+}
+
+tutorialLikes [icon: thumbs-up] {
+  uid string
+  tutId string
+  value int enum
+}
+
+commentLikes [icon: thumbs-up] {
+  uid string
+  commentId string
+  value int enum
+}
+
+clComments [icon: comments] {
+  commentId string
+  context string
+  upVotes string
+  downVotes int
+  userId string
+  tutorialId string
+  createdAt Date
+  replyTo stirng tut_id comment id
+}
+
+tutorials [icon: video] {
+  tutId string
+  editors string[] users
+  tutTitle string
+  isPublished boolean
+  featuredImage string
+  icon string
+  tutDescription string
+  tutTags string[]
+  orgHandle string
+  commentsCount array
+  upVotes int
+  downVotes int
+  yjsStepDocs subCollection
+  steps string[] steps
+  createdAt Date
+  summary string
+}
+
+steps [icon: ] {
+  content string
+  deleted boolean
+  id tutIdTime
+  time int
+  title string
+  visibility boolean
+}
+
+
+
+relatedPosts.uid - clUsers.uid
+relatedPosts.tutId - tutorials.tutId
+tutorialLikes.tutId - tutorials.tutId
+tutorialLikes.uid - clUsers.uid
+clComments.userId - clUsers.uid
+commentLikes.uid - clUsers.uid
+commentLikes.commentId - clComments.commentId
+clComments.tutorialId - tutorials.tutId
+notifications.uid - clUsers.uid
+tutorials.steps - steps.id
+orgSubscribers.uid - clUsers.uid
+userFollowers.id - clUsers.uid
+cl_org_general.orgHandle - orgUsers.orgHandle
+orgUsers.uid - clUsers.organisations
+cl_org_general.orgHandle - orgSubscribers.orgHadle
