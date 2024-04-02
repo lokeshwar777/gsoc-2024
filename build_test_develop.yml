@@ -1,0 +1,67 @@
+name: Build and Test (Develop)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Lint and format code
+        run: |
+          npm run lint
+          npm run format
+
+      - name: Run unit tests with coverage
+        run: npm run test:unit -- --coverage
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(npm run coverage --silent | tail -n 1 | awk '{print $1}' | cut -d "%" -f1)
+          if [ $COVERAGE -lt 94 ]; then
+            echo "Coverage is below threshold. Aborting."
+            exit 1
+          fi
+
+      - name: Build
+        working-directory: ./
+        run: npm run build
+        env:
+          VITE_APP_FIREBASE_API_KEY: ${{ secrets.VITE_APP_FIREBASE_API_KEY }}
+          VITE_APP_FIREBASE_PROJECT_ID: ${{ secrets.VITE_APP_FIREBASE_PROJECT_ID }}
+          VITE_APP_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_APP_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_APP_FIREBASE_APP_ID: ${{ secrets.VITE_APP_FIREBASE_APP_ID }}
+          VITE_APP_FIREBASE_MEASUREMENTID: ${{ secrets.VITE_APP_FIREBASE_MEASUREMENTID }}
+          VITE_APP_FIREBASE_FCM_VAPID_KEY: ${{ secrets.VITE_APP_FIREBASE_FCM_VAPID_KEY }}
+          VITE_APP_AUTH_DOMAIN: ${{ secrets.VITE_APP_AUTH_DOMAIN }}
+          VITE_APP_DATABASE_URL: ${{secrets.VITE_APP_DATABASE_URL}}
+          SKIP_PREFLIGHT_CHECK: true
+          CI: false
+
+      - name: Archive Production Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: build
+          path: ./build
