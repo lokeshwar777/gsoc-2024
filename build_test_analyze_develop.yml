@@ -1,4 +1,4 @@
-name: Build and Test (Develop)
+name: Build, Test, and Analyze (Develop)
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
           VITE_APP_FIREBASE_MEASUREMENTID: ${{ secrets.VITE_APP_FIREBASE_MEASUREMENTID }}
           VITE_APP_FIREBASE_FCM_VAPID_KEY: ${{ secrets.VITE_APP_FIREBASE_FCM_VAPID_KEY }}
           VITE_APP_AUTH_DOMAIN: ${{ secrets.VITE_APP_AUTH_DOMAIN }}
-          VITE_APP_DATABASE_URL: ${{secrets.VITE_APP_DATABASE_URL}}
+          VITE_APP_DATABASE_URL: ${{ secrets.VITE_APP_DATABASE_URL }}
           SKIP_PREFLIGHT_CHECK: true
           CI: false
 
@@ -65,3 +65,24 @@ jobs:
         with:
           name: build
           path: ./build
+
+  analyze:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Prometheus
+        run: |
+          wget https://github.com/prometheus/prometheus/releases/download/v2.30.3/prometheus-2.30.3.linux-amd64.tar.gz
+          tar -xzf prometheus-2.30.3.linux-amd64.tar.gz
+          # Additional configuration and setup steps for Prometheus can be added here
+
+      - name: Install Grafana
+        run: |
+          wget https://dl.grafana.com/oss/release/grafana-8.2.5.linux-amd64.tar.gz
+          tar -zxvf grafana-8.2.5.linux-amd64.tar.gz
+          # Additional configuration and setup steps for Grafana can be added here
+
+      - name: Install Storybook
+        run: |
+          npm run build-storybook
